@@ -17,18 +17,6 @@ count = count_text.scan(/\d/).join.to_i
 num_pages = (count / 10.0).ceil
 emails = []
 
-# Iterate through each page, grabs the emails from the page and adds them to the email array
-1.upto(num_pages).each do |page|
-	b.driver.manage.timeouts.implicit_wait = 10
-	url = "https://github.com/search?q=location%3ABuffalo%2CNY+location%3ASyracuse%2CNY+location%3ARochester%2CNY+location%3AAlbany%2CNY+location%3ABinghamton%2CNY+location%3AIthaca%2CNY&type=Users&s=followers&p=#{page}"
-	b.goto url
-	links = b.links class: 'email'
-	links.each do |l|
-		emails << l.text
-	end
-	puts emails.count
-end
-
 # Save the email addresses to a csv
 def save_emails(emails)
 	puts "Saving email addresses to CSV"
@@ -38,9 +26,21 @@ def save_emails(emails)
 	end
 end
 
-save_emails(emails)
+# Iterate through each page, grabs the emails from the page and adds them to the email array
+# TODO: There's a bug with how this block iterates through the total number of email addresses. It should pull 10 on each page (except the last), but for some reason it will pull 9 the first time, 7 more the next time, etc.
+1.upto(num_pages).each do |page|
+	b.driver.manage.timeouts.implicit_wait = 10
+	url = "https://github.com/search?q=location%3ABuffalo%2CNY+location%3ASyracuse%2CNY+location%3ARochester%2CNY+location%3AAlbany%2CNY+location%3ABinghamton%2CNY+location%3AIthaca%2CNY&type=Users&s=followers&p=#{page}"
+	b.goto url
+	links = b.links class: 'email'
+	links.each do |l|
+		emails << l.text
+		emails.uniq
+	end
+	puts emails.count
+	puts emails.inspect
+	save_emails(emails)
 
-# TODO: Github restricts the number of requests you can make at once. Need to put a timeout or something
-
-puts emails.count
-
+	# TODO: I'm assuming there's a more elegant way to do this?
+	sleep 10
+end
