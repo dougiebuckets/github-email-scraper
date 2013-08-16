@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'watir-webdriver'
+require 'csv'
 
 # Create a new instance of the browser
 b = Watir::Browser.new :firefox
@@ -15,6 +16,7 @@ count = count_text.scan(/\d/).join.to_i
 # Get the number of pages (10 results per page)
 num_pages = (count / 10.0).ceil
 emails = []
+
 # Iterate through each page, grabs the emails from the page and adds them to the email array
 1.upto(num_pages).each do |page|
 	b.driver.manage.timeouts.implicit_wait = 10
@@ -24,11 +26,21 @@ emails = []
 	links.each do |l|
 		emails << l.text
 	end
-	puts emails.count	
+	puts emails.count
 end
 
+# Save the email addresses to a csv
+def save_emails(emails)
+	puts "Saving email addresses to CSV"
+	
+	CSV.open("emails.csv", "w") do |csv|
+		csv << emails
+	end
+end
 
-# TODO: Save the emails to some kind of file or data store
+save_emails(emails)
+
 # TODO: Github restricts the number of requests you can make at once. Need to put a timeout or something
+
 puts emails.count
 
